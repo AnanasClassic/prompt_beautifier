@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Prompt Beautifier</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      max-width: 600px;
+      margin: 2em auto;
+    }
+
+    textarea {
+      width: 100%;
+      height: 150px;
+    }
+
+    #response {
+      white-space: pre-wrap;
+      background: #f7f7f7;
+      padding: 1em;
+      margin-top: 1em;
+      border: 1px solid #ddd;
+    }
+
+    button {
+      padding: 0.5em 1em;
+      font-size: 1em;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Prompt beautifier</h1>
+  <textarea id="prompt" placeholder="Введите промпт..."></textarea>
+  <br>
+  <button id="sendBtn">Отправить</button>
+
+  <div id="response" hidden></div>
+
+  <script>
+    const API_KEY = 'API_KEY';
+    const BASE_URL = 'https://entitled-lie-doors-flow.trycloudflare.com/v1';
+
+    document.getElementById('sendBtn').addEventListener('click', async () => {
+      const prompt = document.getElementById('prompt').value.trim();
+      if (!prompt) return alert('Введите промпт.');
+
+      const respDiv = document.getElementById('response');
+      respDiv.hidden = false;
+      respDiv.textContent = 'Загрузка...';
+
+      try {
+        const headers = {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${API_KEY}`
+        };
+
+        const system_message = `You are a Prompt Enhancer for an LLM. Your task is to:
+
+1. Извлекать из входного сообщения текст, обёрнутый в теги "<prompt>" и "</prompt>".
+2. Проанализировать исходный текст: 
+   - Улучшить ясность и однозначность формулировок.
+   - Добавить недостающие детали и конкретику (контекст, формат ответа, стиль, тон и т. д.).
+   - Оптимизировать для лучшей производительности модели (четкая структура, ключевые указания).
+3. Сохранить намерение и ключевые смысловые элементы оригинала, но переписать текст так, чтобы он был более полным и понятным.
+4. Вывести только готовый «улучшенный промпт» без тегов "<prompt>" и без дополнительных комментариев.
+
+
+### Пример  
+**Вход:**  
+"<prompt>Как забронировать отель в Париже?</prompt>"
+
+**Выход:**  
+«Дай подробную инструкцию по поиску и бронированию отеля в Париже:  
+1. Как подобрать район с учётом бюджета и интересов.  
+2. Какие платформы и сайты использовать.  
+3. Как сравнить цены и условия (отмена, завтрак и т. д.).  
+4. На что обратить внимание в отзывах гостей.  
+Ответ обоснуй и приведи примеры.»
+`
+        const wrapped = `<prompt>\n${prompt}\n</prompt>`;
+
+        const res = await fetch(`${BASE_URL}/chat/completions`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            model: 'Qwen/Qwen2.5-1.5B-Instruct',
+            messages: [
+              { role: 'system', content: system_message },
+              { role: 'user', content: wrapped }
+            ]
+          })
+        });
+
+        if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+
+        const data = await res.json();
+        respDiv.textContent = data.choices?.[0]?.message?.content || 'Пустой ответ.';
+      } catch (err) {
+        respDiv.textContent = `Ошибка: ${err.message}`;
+      }
+    });
+  </script>
+
+
+</body>
+
+</html>
