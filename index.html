@@ -4,51 +4,158 @@
 <head>
   <meta charset="UTF-8">
   <title>Prompt Beautifier</title>
+  <!-- Подключаем шрифты -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
   <style>
+    :root {
+      --primary: #4f46e5;
+      --primary-light: #6366f1;
+      --bg: #f9fafb;
+      --card-bg: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --radius: 0.5rem;
+      --transition: 0.3s ease;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
     body {
-      font-family: sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg);
+      font-family: 'Inter', sans-serif;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      background: var(--card-bg);
       max-width: 600px;
-      margin: 2em auto;
+      width: 100%;
+      margin: 1rem;
+      padding: 2rem;
+      border-radius: var(--radius);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+
+    h1 {
+      margin-top: 0;
+      margin-bottom: 1rem;
+      font-weight: 600;
+      font-size: 1.75rem;
+      text-align: center;
+      color: var(--primary);
     }
 
     textarea {
       width: 100%;
-      height: 150px;
+      min-height: 150px;
+      padding: 1rem;
+      font-size: 1rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      resize: vertical;
+      transition: border-color var(--transition), box-shadow var(--transition);
+    }
+
+    textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+    }
+
+    .controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 1rem;
+    }
+
+    .controls button {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+      font-weight: 500;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: background-color var(--transition), transform var(--transition);
+    }
+
+    .controls button:hover {
+      background: var(--primary-light);
+      transform: translateY(-2px);
+    }
+
+    .controls button:active {
+      transform: translateY(0);
     }
 
     #response {
+      margin-top: 1.5rem;
+      padding: 1rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
       white-space: pre-wrap;
-      background: #f7f7f7;
-      padding: 1em;
-      margin-top: 1em;
-      border: 1px solid #ddd;
+      color: var(--text);
+      min-height: 100px;
+      transition: opacity var(--transition);
     }
 
-    button {
-      padding: 0.5em 1em;
-      font-size: 1em;
+    #response.hidden {
+      display: none;
+    }
+
+    /* Адаптив */
+    @media (max-width: 480px) {
+      .controls {
+        flex-direction: column;
+      }
+
+      .controls button {
+        width: 100%;
+        margin-top: 0.5rem;
+      }
     }
   </style>
 </head>
 
 <body>
-  <h1>Prompt beautifier</h1>
-  <textarea id="prompt" placeholder="Введите промпт..."></textarea>
-  <br>
-  <button id="sendBtn">Отправить</button>
-
-  <div id="response" hidden></div>
+  <div class="container">
+    <h1>Prompt Beautifier</h1>
+    <textarea id="prompt" placeholder="Введите промпт..."></textarea>
+    <div class="controls">
+      <button id="sendBtn">Отправить</button>
+    </div>
+    <div id="response" class="hidden"></div>
+  </div>
 
   <script>
     const API_KEY = 'API_KEY';
     const BASE_URL = 'https://entitled-lie-doors-flow.trycloudflare.com/v1';
 
     document.getElementById('sendBtn').addEventListener('click', async () => {
-      const prompt = document.getElementById('prompt').value.trim();
-      if (!prompt) return alert('Введите промпт.');
-
+      const promptEl = document.getElementById('prompt');
       const respDiv = document.getElementById('response');
-      respDiv.hidden = false;
+      const prompt = promptEl.value.trim();
+      if (!prompt) {
+        promptEl.focus();
+        return;
+      }
+
+      respDiv.classList.remove('hidden');
       respDiv.textContent = 'Загрузка...';
 
       try {
@@ -58,28 +165,26 @@
         };
 
         const system_message = `You are a Prompt Enhancer for an LLM. Your task is to:
-
 1. Извлекать из входного сообщения текст, обёрнутый в теги "<prompt>" и "</prompt>".
-2. Проанализировать исходный текст: 
+2. Проанализировать исходный текст:
    - Улучшить ясность и однозначность формулировок.
-   - Добавить недостающие детали и конкретику (контекст, формат ответа, стиль, тон и т. д.).
+   - Добавить недостающие детали и конкретику (контекст, формат ответа, стиль, тон и т. д.).
    - Оптимизировать для лучшей производительности модели (четкая структура, ключевые указания).
 3. Сохранить намерение и ключевые смысловые элементы оригинала, но переписать текст так, чтобы он был более полным и понятным.
 4. Вывести только готовый «улучшенный промпт» без тегов "<prompt>" и без дополнительных комментариев.
 
-
-### Пример  
-**Вход:**  
+### Пример
+**Вход:**
 "<prompt>Как забронировать отель в Париже?</prompt>"
 
-**Выход:**  
-«Дай подробную инструкцию по поиску и бронированию отеля в Париже:  
-1. Как подобрать район с учётом бюджета и интересов.  
-2. Какие платформы и сайты использовать.  
-3. Как сравнить цены и условия (отмена, завтрак и т. д.).  
-4. На что обратить внимание в отзывах гостей.  
-Ответ обоснуй и приведи примеры.»
-`
+**Выход:**
+«Дай подробную инструкцию по поиску и бронированию отеля в Париже:
+1. Как подобрать район с учётом бюджета и интересов.
+2. Какие платформы и сайты использовать.
+3. Как сравнить цены и условия (отмена, завтрак и т. д.).
+4. На что обратить внимание в отзывах гостей.
+Ответ обоснуй и приведи примеры.»`;
+
         const wrapped = `<prompt>\n${prompt}\n</prompt>`;
 
         const res = await fetch(`${BASE_URL}/chat/completions`, {
@@ -103,8 +208,6 @@
       }
     });
   </script>
-
-
 </body>
 
 </html>
