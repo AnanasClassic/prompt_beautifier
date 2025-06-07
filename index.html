@@ -144,7 +144,7 @@
 
   <script>
     const API_KEY = 'API_KEY';
-    const BASE_URL = 'https://entitled-lie-doors-flow.trycloudflare.com/v1';
+    const BASE_URL = 'https://oven-improved-remainder-constitute.trycloudflare.com';
 
     document.getElementById('sendBtn').addEventListener('click', async () => {
       const promptEl = document.getElementById('prompt');
@@ -164,45 +164,18 @@
           'Authorization': `Bearer ${API_KEY}`
         };
 
-        const system_message = `You are a Prompt Enhancer for an LLM. Your task is to:
-1. Извлекать из входного сообщения текст, обёрнутый в теги "<prompt>" и "</prompt>".
-2. Проанализировать исходный текст:
-   - Улучшить ясность и однозначность формулировок.
-   - Добавить недостающие детали и конкретику (контекст, формат ответа, стиль, тон и т. д.).
-   - Оптимизировать для лучшей производительности модели (четкая структура, ключевые указания).
-3. Сохранить намерение и ключевые смысловые элементы оригинала, но переписать текст так, чтобы он был более полным и понятным.
-4. Вывести только готовый «улучшенный промпт» без тегов "<prompt>" и без дополнительных комментариев.
-
-### Пример
-**Вход:**
-"<prompt>Как забронировать отель в Париже?</prompt>"
-
-**Выход:**
-«Дай подробную инструкцию по поиску и бронированию отеля в Париже:
-1. Как подобрать район с учётом бюджета и интересов.
-2. Какие платформы и сайты использовать.
-3. Как сравнить цены и условия (отмена, завтрак и т. д.).
-4. На что обратить внимание в отзывах гостей.
-Ответ обоснуй и приведи примеры.»`;
-
-        const wrapped = `<prompt>\n${prompt}\n</prompt>`;
-
-        const res = await fetch(`${BASE_URL}/chat/completions`, {
+        const res = await fetch(`${BASE_URL}/improve`, {
           method: 'POST',
           headers,
           body: JSON.stringify({
-            model: 'Qwen/Qwen2.5-1.5B-Instruct',
-            messages: [
-              { role: 'system', content: system_message },
-              { role: 'user', content: wrapped }
-            ]
+            prompt: prompt
           })
         });
 
         if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
 
         const data = await res.json();
-        respDiv.textContent = data.choices?.[0]?.message?.content || 'Пустой ответ.';
+        respDiv.textContent = data.improved_prompt || 'Пустой ответ.';
       } catch (err) {
         respDiv.textContent = `Ошибка: ${err.message}`;
       }
